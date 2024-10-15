@@ -1,18 +1,48 @@
 const express = require('express');
-const { createCard, getUserCards, toggleFavorite, deleteCard } = require('../controllers/cardController');
-const authMiddleware = require('../middleware/auth'); // Middleware для проверки токена
+const Card = require('../models/Card');
 const router = express.Router();
 
-// POST /cards - Создание новой карточки
-router.post('/cards', authMiddleware, createCard);
+// Создание новой карточки
+router.post('/add', async (req, res) => {
+  const { image, title, description, userId } = req.body;
 
-// GET /cards - Получение всех карточек пользователя
-router.get('/cards', authMiddleware, getUserCards);
+  const newCard = new Card({
+    image,
+    title,
+    description,
+    userId,
+  });
 
-// PUT /cards/favorite/:cardId - Обновление статуса избранного
-router.put('/cards/favorite/:cardId', authMiddleware, toggleFavorite);
+  try {
+    await newCard.save();
+    res.status(201).json(newCard);
+  } catch (error) {
+    res.status(500).send('Error creating card');
+  }
+});
 
-// DELETE /cards/:cardId - Удаление карточки
-router.delete('/cards/:cardId', authMiddleware, deleteCard);
+// Получение всех карточек
+router.get('/all', async (req, res) => {
+  try {
+    const cards = await Card.find();
+    res.status(200).json(cards);
+  } catch (error) {
+    res.status(500).send('Error fetching cards');
+  }
+});
+
+// Обновление карточки (изменение избранного статуса)
+router.put('/favorite/:id', async (req, res) => {
+  try {
+    const card = await Card.findById(req.params.id);
+    if (!card) return res.status(404).send('Card not found');
+
+    card.isFavorite = !card.isFavorite;
+    await card.save();
+    res.status(200).json(card);
+  } catch (error) {
+    res.status(500).send('Error updating card');
+  }
+});
 
 module.exports = router;

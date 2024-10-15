@@ -1,17 +1,18 @@
 const express = require('express');
+const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('./models/User');
-const crypto = require('crypto');
-const secretKey = crypto.randomBytes(64).toString('hex');
+const cardRoutes = require('./routes/cardRoutes');
+dotenv.config();
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-const db = 'mongodb+srv://nurzigitturman:Nurik123@cluster0.assyc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
+const db = process.env.MONGODB_URI
 
 
 mongoose.connect(db)
@@ -62,7 +63,7 @@ app.post('/api/auth/login', async (req, res) => {
     return res.status(400).send('Invalid email or password');
   }
 
-  const token = jwt.sign({ id: user._id, role: user.role }, secretKey, { expiresIn: '1h' });
+  const token = jwt.sign({ id: user._id, role: user.role }, process.env.SECRET_KEY, { expiresIn: '1h' });
 
   res.status(200).json({ token, user });
 });
@@ -76,7 +77,7 @@ app.get('/api/main', (req, res) => {
   }
 
   try {
-    const verified = jwt.verify(token, secretKey);
+    const verified = jwt.verify(token, process.env.SECRET_KEY);
     req.user = verified;
     res.status(200).send('Welcome to the main page');
   } catch (err) {
@@ -84,6 +85,9 @@ app.get('/api/main', (req, res) => {
   }
 });
 
+
+
+app.use('/api/cards', cardRoutes);
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
