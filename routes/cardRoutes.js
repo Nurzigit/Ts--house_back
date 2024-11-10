@@ -2,7 +2,7 @@ const express = require('express');
 const Card = require('../models/Card');
 const router = express.Router();
 
-// Создание новой карточки
+
 router.post('/add', async (req, res) => {
   const { image, title, description, userId } = req.body;
 
@@ -21,7 +21,7 @@ router.post('/add', async (req, res) => {
   }
 });
 
-// Получение всех карточек
+
 router.get('/all', async (req, res) => {
   try {
     const cards = await Card.find();
@@ -31,7 +31,7 @@ router.get('/all', async (req, res) => {
   }
 });
 
-// Обновление карточки (изменение избранного статуса)
+
 router.put('/favorite/:id', async (req, res) => {
   try {
     const card = await Card.findById(req.params.id);

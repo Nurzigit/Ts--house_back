@@ -1,9 +1,9 @@
 const Card = require('../models/Card');
 
-// Создание новой карточки
+
 exports.createCard = async (req, res) => {
   const { title, description, image, date, time } = req.body;
-  const userId = req.user._id; // Получаем ID пользователя из токена
+  const userId = req.user._id;
 
   try {
     const newCard = new Card({
@@ -22,7 +22,7 @@ exports.createCard = async (req, res) => {
   }
 };
 
-// Получение всех карточек для пользователя
+
 exports.getUserCards = async (req, res) => {
   const userId = req.user._id;
 
@@ -34,7 +34,7 @@ exports.getUserCards = async (req, res) => {
   }
 };
 
-// Обновление статуса избранного
+
 exports.toggleFavorite = async (req, res) => {
   const { cardId } = req.params;
 
@@ -53,7 +53,6 @@ exports.toggleFavorite = async (req, res) => {
   }
 };
 
-// Удаление карточки
 exports.deleteCard = async (req, res) => {
   const { cardId } = req.params;
 
