@@ -120,6 +120,10 @@ exports.updateFavorite = async (req, res) => {
     res.json(card);
   } catch (error) {
     console.error(error);
+<<<<<<< HEAD
     res.status(500).json({ message: 'Server errors' });
+=======
+    res.status(500).json({ message: 'Server error' });
+>>>>>>> 92f7c096e1938b1bdeec3939752f2fe921719197
   }
 };
