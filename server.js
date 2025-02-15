@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const cardRoutes = require("./routes/cardRoutes");
 const authRoutes = require("./routes/authRoutes");
+const messagesRoutes = require("./routes/messageRoutes");
 dotenv.config();
 
 const app = express();
@@ -19,6 +20,8 @@ mongoose
 
 app.use("/api/auth", authRoutes);
 app.use("/api/cards", cardRoutes);
+app.use("/uploads", express.static("uploads"));
+app.use("/api/messages", messagesRoutes);
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {

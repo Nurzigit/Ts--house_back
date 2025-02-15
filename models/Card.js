@@ -7,6 +7,8 @@ const cardSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   isFavorite: { type: Boolean, default: false },
+  isTop: { type: Boolean, default: false },
+  isPremium: { type: Boolean, default: false },
 });
 
 module.exports = mongoose.model('Card', cardSchema);
