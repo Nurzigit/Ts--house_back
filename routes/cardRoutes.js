@@ -1,83 +1,123 @@
-const express = require('express');
-const Card = require('../models/Card');
+const express = require("express");
+const Card = require("../models/Card");
+const User = require("../models/User");
+const multer = require("multer");
+const path = require("path");
 const router = express.Router();
 
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploadImages/");
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
 
-router.post('/add', async (req, res) => {
-  const { image, title, description, userId } = req.body;
+const upload = multer({ storage });
 
-  const newCard = new Card({
-    image,
-    title,
-    description,
-    userId,
-  });
+router.post("/add", async (req, res) => {
+  console.log("Received data:", req.body);
+
+  const { images, title, description, userId, price, location } = req.body; // ✅ Исправлено на images
+
+  if (
+    !images || images.length === 0 || // ✅ Проверяем, что массив изображений не пустой
+    !title ||
+    !description ||
+    !userId ||
+    !price ||
+    !location ||
+    !location.address ||
+    !location.coordinates
+  ) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
 
   try {
+    const newCard = new Card({
+      images, // ✅ Исправлено на images вместо image
+      title,
+      description,
+      userId,
+      price,
+      location,
+    });
+
     await newCard.save();
     res.status(201).json(newCard);
   } catch (error) {
-    res.status(500).send('Error creating card');
+    console.error("Error creating card:", error);
+    res.status(500).json({ error: "Internal server error", details: error.message });
   }
 });
 
-
-router.get('/all', async (req, res) => {
+router.get("/all", async (req, res) => {
   try {
     const cards = await Card.find();
     res.status(200).json(cards);
   } catch (error) {
-    res.status(500).send('Error fetching cards');
+    res.status(500).send("Error fetching cards");
   }
 });
 
+// router.put('/favorite/:id', async (req, res) => {
+//   try {
+//     const card = await Card.findById(req.params.id);
+//     if (!card) return res.status(404).send('Card not found');
 
-router.put('/favorite/:id', async (req, res) => {
+//     card.isFavorite = !card.isFavorite;
+//     await card.save();
+//     res.status(200).json(card);
+//   } catch (error) {
+//     res.status(500).send('Error updating card');
+//   }
+// });
+router.get("/:userId/favorites", async (req, res) => {
   try {
-    const card = await Card.findById(req.params.id);
-    if (!card) return res.status(404).send('Card not found');
+    const user = await User.findById(req.params.userId).populate("favorites");
 
-    card.isFavorite = !card.isFavorite;
-    await card.save();
-    res.status(200).json(card);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    res.status(200).json(user.favorites); // Отправляем массив карточек
   } catch (error) {
-    res.status(500).send('Error updating card');
+    console.error("Ошибка при загрузке избранных карточек:", error);
+    res.status(500).json({ error: "Error fetching favorite cards" });
   }
 });
-
 
 // Обновление состояния избранного для конкретного пользователя
-router.put('/favorite/:cardId', async (req, res) => {
-  const { cardId } = req.params;
-  const userId = req.user._id; // Получаем идентификатор пользователя из токена
+router.put("/favorite/:id", async (req, res) => {
+  const { id: cardId } = req.params;
+  const { userId } = req.body; // Теперь мы получаем userId из тела запроса
 
   try {
-    // Проверяем, существует ли карточка
-    const card = await Card.findById(cardId);
-    if (!card) return res.status(404).send('Card not found');
-
-    // Находим пользователя
     const user = await User.findById(userId);
-    if (!user) return res.status(404).send('User not found');
+    console.log(user);
+    if (!user) return res.status(404).json({ error: "User not found" });
 
-    // Проверяем, добавлена ли карточка в избранное у пользователя
     const isFavorite = user.favorites.includes(cardId);
 
     if (isFavorite) {
-      // Убираем карточку из избранного
-      user.favorites.pull(cardId);
+      user.favorites.pull(cardId); // Убираем из избранного
     } else {
-      // Добавляем карточку в избранное
-      user.favorites.push(cardId);
+      user.favorites.push(cardId); // Добавляем в избранное
     }
 
     await user.save();
-    res.status(200).json({ message: 'Favorite status updated', isFavorite: !isFavorite });
+    res
+      .status(200)
+      .json({ message: "Favorite status updated", isFavorite: !isFavorite });
   } catch (error) {
-    res.status(500).send('Error updating favorite status');
+    res.status(500).json({ error: "Error updating favorite status" });
   }
 });
 
-
+router.post("/upload", upload.single("image"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: "No file uploaded" });
+  }
+  res.json({ imageUrl: `/uploadImages/${req.file.filename}` });
+});
 
 module.exports = router;

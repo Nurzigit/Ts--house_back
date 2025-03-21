@@ -19,6 +19,7 @@ mongoose
   .catch((err) => console.error("Failed to connect to MongoDB", err));
 
 app.use("/api/auth", authRoutes);
+app.use("/uploadImages", express.static("uploadImages"));
 app.use("/api/cards", cardRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/api/messages", messagesRoutes);
